@@ -1,4 +1,4 @@
-function p(a) {
+function priority(a) {
     if (a === "^")
         return 3;
     else if (a === "*" || a === "/")
@@ -17,98 +17,98 @@ function operand(a) {
 }
 
 function eval() {
-    var inf = "(" + document.getElementById('inputbox1').value + ")";
-    inf = inf.replace(/\s/g, "");
-    var infix = [];
-    var array = [];
-    var output = [];
-    infix = inf.split("");
-    for (let i = 0, j = 0; i < infix.length; i++) {
-        if (operand(infix[i])) {
-            let c = infix[i];
-            while (operand(infix[i + 1])) {
-                i += 1;
-                c = c + infix[i];
-            }
-            array[j] = Number(c);
-            j++;
-        } else {
-            array[j] = infix[i];
-            j++;
+    var array, infix = [], postfix = [];
+    var data = "(" + document.getElementById('inputbox1').value + ")";
+    data = data.replace(/\s/g, "");
+    array = data.split("");
+    for (let i = 0, j = 0; i < array.length; i++) {
+        if (operand(array[i])) {
+            let c = array[i];
+            while (operand(array[i + 1]))
+                c = c + array[++i];
+            infix[j++] = Number(c);
         }
-
+        else {
+            if (array[i] == "(" && array[i + 1] == "-") {
+                let c = array[++i];
+                while (operand(array[i + 1]))
+                    c = c + array[++i];
+                if (array[i + 1] == ")")
+                    i++;
+                else
+                    infix[j++] = "(";
+                infix[j++] = Number(c);
+            }
+            else infix[j++] = array[i];
+        }
     }
     var stack = ["("];
     var i = 1;
-    while (i < array.length) {
-        var item = array[i];
-        var key = stack.pop();
+    while (i < infix.length) {
+        let item = infix[i];
+        let key = stack.pop();
         if (operand(item)) {
             stack.push(key);
-            output.push(item);
+            postfix.push(item);
         } else {
             if (item == ")") {
                 while (key != "(") {
-                    output.push(key);
+                    postfix.push(key);
                     key = stack.pop();
                 }
-
-            } else if (item == "(") {
+            }
+            else if (item == "(") {
                 stack.push(key);
                 stack.push(item);
-            } else if (p(key) >= p(item)) {
-                while (p(key) >= p(item)) {
-                    output.push(key);
+            }
+            else if (priority(key) >= priority(item)) {
+                while (priority(key) >= priority(item)) {
+                    postfix.push(key);
                     key = stack.pop();
                 }
                 stack.push(key);
                 stack.push(item);
-            } else if (p(key) < p(item)) {
+            }
+            else if (priority(key) < priority(item)) {
                 stack.push(key);
                 stack.push(item);
             }
         }
         i += 1;
     }
-    if (stack.length == 0) {
-        evaluate(output);
-    } else {
-        console.log("Worng expression");
-    }
+    if (stack.length == 0) evaluate(postfix);
+    else console.log("Worng expression");
 
-    function operation(x, y, z) {
-        if (z == "+") {
-            return x + y;
-        } else if (z == "-") {
-            return x - y;
-        } else if (z == "*") {
-            return x * y;
-        } else if (z == "/") {
-            return x / y;
-        } else if (z == "^") {
-            return x ** y;
-        }
-    }
-
-    function evaluate(a) {
-        var stack = [];
-        var i = 0;
-        while (i < a.length) {
-            if (operand(a[i])) {
-                stack.push(a[i]);
-            } else {
-                x = stack.pop();
-                y = stack.pop();
-                let temp = operation(y, x, a[i]);
-                stack.push(temp);
-            }
-            i += 1;
-        }
-        let m = stack.pop();
-        if (Number.isNaN(m) || typeof m == "undefined") {
-            document.getElementById('inputbox2').value = document.getElementById('inputbox1').value;
+}
+function operation(x, y, z) {
+    if (z == "+")
+        return x + y;
+    else if (z == "-")
+        return x - y;
+    else if (z == "*")
+        return x * y;
+    else if (z == "/")
+        return x / y;
+    else if (z == "^")
+        return x ** y;
+}
+function evaluate(a) {
+    var stack = [];
+    var i = 0;
+    while (i < a.length) {
+        if (operand(a[i])) {
+            stack.push(a[i]);
         } else {
-            document.getElementById('inputbox2').value = document.getElementById('inputbox1').value + " = " + m;
+            x = stack.pop();
+            y = stack.pop();
+            let temp = operation(y, x, a[i]);
+            stack.push(temp);
         }
+        i++;
     }
+    let m = stack.pop();
+    if (Number.isNaN(m) || typeof m == "undefined")
+        document.getElementById('inputbox2').value = document.getElementById('inputbox1').value;
+    else
+        document.getElementById('inputbox2').value = document.getElementById('inputbox1').value + " = " + m;
 }
